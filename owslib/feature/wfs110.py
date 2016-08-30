@@ -39,7 +39,7 @@ class WebFeatureService_1_1_0(WebFeatureService_):
     Implements IWebFeatureService.
     """
     def __new__(self,url, version, xml, parse_remote_metadata=False, timeout=30,
-                username=None, password=None):
+                username=None, password=None, req_kwargs=None):
         """ overridden __new__ method
 
         @type url: string
@@ -51,11 +51,12 @@ class WebFeatureService_1_1_0(WebFeatureService_):
         @param timeout: time (in seconds) after which requests should timeout
         @param username: service authentication username
         @param password: service authentication password
+        @param req_kwargs: a dictionary of additional HTTP requests parameters
         @return: initialized WebFeatureService_1_1_0 object
         """
         obj=object.__new__(self)
         obj.__init__(url, version, xml, parse_remote_metadata, timeout,
-                     username=username, password=password)
+                     username=username, password=password, req_kwargs=req_kwargs)
         return obj
 
     def __getitem__(self,name):
@@ -67,16 +68,18 @@ class WebFeatureService_1_1_0(WebFeatureService_):
 
 
     def __init__(self, url, version, xml=None, parse_remote_metadata=False, timeout=30,
-                 username=None, password=None):
+                 username=None, password=None, req_kwargs=None):
         """Initialize."""
         self.url = url
         self.version = version
         self.timeout = timeout
         self.username = username
         self.password = password
+        self.req_kwargs = req_kwargs
         self._capabilities = None
         self.owscommon = OwsCommon('1.0.0')
-        reader = WFSCapabilitiesReader(self.version)
+        reader = WFSCapabilitiesReader(self.version, self.username, self.password,
+                                       req_kwargs=self.req_kwargs)
         if xml:
             self._capabilities = reader.readString(xml)
         else:
@@ -120,7 +123,8 @@ class WebFeatureService_1_1_0(WebFeatureService_):
         NOTE: this is effectively redundant now"""
         reader = WFSCapabilitiesReader(self.version)
         return openURL(reader.capabilities_url(self.url), timeout=self.timeout,
-                       username=self.username, password=self.password)
+                       username=self.username, password=self.password,
+                       req_kwargs=self.req_kwargs)
 
     def items(self):
         '''supports dict-like items() access'''

@@ -46,7 +46,7 @@ class WebFeatureService_2_0_0(WebFeatureService_):
     Implements IWebFeatureService.
     """
     def __new__(self,url, version, xml, parse_remote_metadata=False, timeout=30,
-                username=None, password=None):
+                username=None, password=None, req_kwargs=None):
         """ overridden __new__ method
 
         @type url: string
@@ -58,11 +58,12 @@ class WebFeatureService_2_0_0(WebFeatureService_):
         @param timeout: time (in seconds) after which requests should timeout
         @param username: service authentication username
         @param password: service authentication password
+        @param req_kwargs: a dictionary of additional HTTP requests parameters
         @return: initialized WebFeatureService_2_0_0 object
         """
         obj=object.__new__(self)
         obj.__init__(url, version, xml, parse_remote_metadata, timeout,
-                     username=username, password=password)
+                     username=username, password=password, req_kwargs=req_kwargs)
         return obj
 
     def __getitem__(self,name):
@@ -74,7 +75,7 @@ class WebFeatureService_2_0_0(WebFeatureService_):
 
 
     def __init__(self, url,  version, xml=None, parse_remote_metadata=False, timeout=30,
-                 username=None, password=None):
+                 username=None, password=None, req_kwargs=None):
         """Initialize."""
         if log.isEnabledFor(logging.DEBUG):
             log.debug('building WFS %s'%url)
@@ -83,8 +84,10 @@ class WebFeatureService_2_0_0(WebFeatureService_):
         self.timeout = timeout
         self.username = username
         self.password = password
+        self.req_kwargs = req_kwargs
         self._capabilities = None
-        reader = WFSCapabilitiesReader(self.version)
+        reader = WFSCapabilitiesReader(self.version, self.username, self.password,
+                                       req_kwargs=self.req_kwargs)
         if xml:
             self._capabilities = reader.readString(xml)
         else:
@@ -139,7 +142,8 @@ class WebFeatureService_2_0_0(WebFeatureService_):
         NOTE: this is effectively redundant now"""
         reader = WFSCapabilitiesReader(self.version)
         return openURL(reader.capabilities_url(self.url), timeout=self.timeout,
-                       username=self.username, password=self.password)
+                       username=self.username, password=self.password,
+                       req_kwargs=self.req_kwargs)
 
     def items(self):
         '''supports dict-like items() access'''
@@ -210,7 +214,8 @@ class WebFeatureService_2_0_0(WebFeatureService_):
 
         # If method is 'Post', data will be None here
         u = openURL(url, data, method, timeout=self.timeout,
-                    username=self.username, password=self.password)
+                    username=self.username, password=self.password,
+                    req_kwargs=self.req_kwargs)
 
         # check for service exceptions, rewrap, and return
         # We're going to assume that anything with a content-length > 32k
@@ -264,7 +269,8 @@ class WebFeatureService_2_0_0(WebFeatureService_):
                 request[kw]=str(kwargs[kw])
         encoded_request=urlencode(request)
         u = openURL(base_url + encoded_request, timeout=self.timeout,
-                    username=self.username, password=self.password)
+                    username=self.username, password=self.password,
+                    req_kwargs=self.req_kwargs)
         return u.read()
 
 
@@ -284,7 +290,8 @@ class WebFeatureService_2_0_0(WebFeatureService_):
         request = {'service': 'WFS', 'version': self.version, 'request': 'ListStoredQueries'}
         encoded_request = urlencode(request)
         u = openURL(base_url, data=encoded_request, timeout=self.timeout,
-                    username=self.username, password=self.password)
+                    username=self.username, password=self.password,
+                    req_kwargs=self.req_kwargs)
         tree=etree.fromstring(u.read())
         tempdict={}
         for sqelem in tree[:]:
@@ -305,7 +312,8 @@ class WebFeatureService_2_0_0(WebFeatureService_):
         request = {'service': 'WFS', 'version': self.version, 'request': 'DescribeStoredQueries'}
         encoded_request = urlencode(request)
         u = openURL(base_url, data=encoded_request, timeout=self.timeout,
-                    username=self.username, password=self.password)
+                    username=self.username, password=self.password,
+                    req_kwargs=self.req_kwargs)
         tree=etree.fromstring(u.read())
         tempdict2={}
         for sqelem in tree[:]:

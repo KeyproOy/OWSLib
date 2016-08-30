@@ -1,4 +1,4 @@
-# -*- coding: ISO-8859-15 -*-
+# -*- coding: utf-8 -*-
 # =============================================================================
 # Copyright (c) 2008 Tom Kralidis
 #
@@ -150,7 +150,7 @@ class ResponseWrapper(object):
     # @TODO: __getattribute__ for poking at response
 
 
-def openURL(url_base, data=None, method=None, cookies=None, username=None, password=None, timeout=30, headers=None):
+def openURL(url_base, data=None, method=None, cookies=None, username=None, password=None, timeout=30, headers=None, req_kwargs=None):
     """
     Function to open URLs.
 
@@ -159,7 +159,8 @@ def openURL(url_base, data=None, method=None, cookies=None, username=None, passw
     """
     headers = headers if headers is not None else {}
     method = method or 'Get'
-    rkwargs = {}
+    rkwargs = req_kwargs.copy() if req_kwargs is not None else {}
+
 
     rkwargs['timeout'] = timeout
 

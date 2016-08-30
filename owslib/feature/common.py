@@ -13,11 +13,12 @@ class WFSCapabilitiesReader(object):
     """Read and parse capabilities document into a lxml.etree infoset
     """
 
-    def __init__(self, version='1.0', username=None, password=None):
+    def __init__(self, version='1.0', username=None, password=None, req_kwargs=None):
         """Initialize"""
         self.version = version
         self.username = username
         self.password = password
+        self.req_kwargs = req_kwargs
         self._infoset = None
 
     def capabilities_url(self, service_url):
@@ -52,7 +53,8 @@ class WFSCapabilitiesReader(object):
         """
         request = self.capabilities_url(url)
         u = openURL(request, timeout=timeout,
-                    username=self.username, password=self.password)
+                    username=self.username, password=self.password,
+                    req_kwargs=self.req_kwargs)
         return etree.fromstring(u.read())
 
     def readString(self, st):
